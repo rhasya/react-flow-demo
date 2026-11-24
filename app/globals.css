@@ -1,6 +1,8 @@
+@layer theme, base, xyflow, components, utilities;
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+@import "@xyflow/react/dist/style.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -126,4 +128,48 @@
   html {
     @apply font-sans;
     }
+}
+
+.react-flow {
+  --xy-background-color: var(--background);
+  --xy-background-pattern-dots-color: color-mix(in oklch, var(--muted-foreground) 40%, transparent);
+  --xy-background-pattern-lines-color: var(--border);
+  --xy-background-pattern-cross-color: var(--border);
+
+  --xy-node-color: var(--card-foreground);
+  --xy-node-background-color: var(--card);
+  --xy-node-border: 1px solid color-mix(in oklch, var(--foreground) 25%, var(--border));
+  --xy-node-border-radius: var(--radius-lg);
+  --xy-node-boxshadow-hover: 0 4px 12px color-mix(in oklch, var(--foreground) 8%, transparent);
+  --xy-node-boxshadow-selected: 0 0 0 2px var(--ring);
+
+  --xy-handle-background-color: var(--primary);
+  --xy-handle-border-color: var(--background);
+
+  --xy-edge-stroke: var(--muted-foreground);
+  --xy-edge-stroke-selected: var(--primary);
+  --xy-connectionline-stroke: var(--primary);
+  --xy-edge-label-background-color: var(--popover);
+  --xy-edge-label-color: var(--popover-foreground);
+
+  --xy-selection-background-color: color-mix(in oklch, var(--primary) 8%, transparent);
+  --xy-selection-border: 1px dashed color-mix(in oklch, var(--primary) 60%, transparent);
+
+  --xy-controls-button-background-color: var(--card);
+  --xy-controls-button-background-color-hover: var(--accent);
+  --xy-controls-button-color: var(--card-foreground);
+  --xy-controls-button-color-hover: var(--accent-foreground);
+  --xy-controls-button-border-color: var(--border);
+  --xy-controls-box-shadow: 0 1px 3px color-mix(in oklch, var(--foreground) 10%, transparent);
+
+  --xy-minimap-background-color: var(--card);
+  --xy-minimap-mask-background-color: color-mix(in oklch, var(--muted) 70%, transparent);
+  --xy-minimap-node-background-color: var(--muted-foreground);
+
+  --xy-attribution-background-color: color-mix(in oklch, var(--background) 80%, transparent);
+  --xy-resize-background-color: var(--primary);
+}
+
+.react-flow.dark {
+  color-scheme: dark;
 }
