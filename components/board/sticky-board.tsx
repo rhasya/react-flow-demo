@@ -24,21 +24,20 @@ import {
   type ColorMode,
   type NodeTypes,
   type OnConnect,
+  type OnMoveEnd,
   type OnNodesChange,
+  type Viewport,
   type XYPosition,
 } from "@xyflow/react"
-import { MapIcon, Maximize2Icon, Trash2Icon } from "lucide-react"
 import { useTheme } from "next-themes"
 
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Separator } from "@/components/ui/separator"
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
-import { INITIAL_EDGES, INITIAL_NODES } from "./initial-elements"
+  createInitialEdges,
+  createInitialNodes,
+  INITIAL_EDGES,
+  INITIAL_NODES,
+} from "./initial-elements"
+import { loadBoardState, saveBoardState } from "./sticky-board-storage"
 import { StickyInputBar } from "./sticky-input-bar"
 import { findNonOverlappingPosition } from "./sticky-note-layout"
 import { StickyNoteNode } from "./sticky-note-node"
@@ -52,10 +51,13 @@ import {
   type StickyNoteColor,
   type StickyNoteNodeType,
 } from "./sticky-note-types"
+import { StickyToolbar } from "./sticky-toolbar"
 
 const nodeTypes = {
   [STICKY_NOTE_TYPE]: StickyNoteNode,
 } satisfies NodeTypes
+
+const DELETE_KEY_CODES = ["Backspace", "Delete"]
 
 function getMiniMapNodeColor(node: StickyNoteNodeType): string {
   const color = node.data?.color
@@ -76,9 +78,16 @@ function useIsHydrated() {
 }
 
 function StickyBoardCanvas() {
-  const [nodes, setNodes, onNodesChange] =
-    useNodesState<StickyNoteNodeType>(INITIAL_NODES)
-  const [edges, setEdges, onEdgesChange] = useEdgesState(INITIAL_EDGES)
+  const [initialBoard] = useState(() => loadBoardState())
+  const [nodes, setNodes, onNodesChange] = useNodesState<StickyNoteNodeType>(
+    initialBoard?.nodes ?? INITIAL_NODES
+  )
+  const [edges, setEdges, onEdgesChange] = useEdgesState(
+    initialBoard?.edges ?? INITIAL_EDGES
+  )
+  const [viewport, setViewport] = useState<Viewport | undefined>(
+    initialBoard?.viewport
+  )
   const [showMiniMap, setShowMiniMap] = useState(true)
   const [draftText, setDraftText] = useState("")
   const [draftColor, setDraftColor] = useState<StickyNoteColor>("yellow")
@@ -100,10 +109,10 @@ function StickyBoardCanvas() {
     screenToFlowPosition,
     setCenter,
     getZoom,
+    getViewport,
     updateNodeData,
   } = useReactFlow<StickyNoteNodeType>()
-  const { resolvedTheme } = useTheme()
-  const isHydrated = useIsHydrated()
+  const { resolvedTheme, setTheme } = useTheme()
 
   useEffect(() => {
     return () => {
@@ -113,8 +122,22 @@ function StickyBoardCanvas() {
     }
   }, [])
 
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      saveBoardState({
+        nodes,
+        edges,
+        viewport: viewport ?? getViewport(),
+      })
+    }, 250)
+
+    return () => {
+      window.clearTimeout(timer)
+    }
+  }, [edges, getViewport, nodes, viewport])
+
   const forceColorMode: ColorMode | undefined =
-    isHydrated && (resolvedTheme === "dark" || resolvedTheme === "light")
+    resolvedTheme === "dark" || resolvedTheme === "light"
       ? resolvedTheme
       : undefined
 
@@ -156,6 +179,26 @@ function StickyBoardCanvas() {
     return findNonOverlappingPosition(preferred, nodes)
   }, [nodes, screenToFlowPosition])
 
+  const focusAndHighlightNode = useCallback(
+    (nodeId: string, position: XYPosition) => {
+      if (highlightTimerRef.current !== null) {
+        window.clearTimeout(highlightTimerRef.current)
+      }
+      setJustCreatedNodeId(nodeId)
+      highlightTimerRef.current = window.setTimeout(() => {
+        setJustCreatedNodeId(null)
+        highlightTimerRef.current = null
+      }, 900)
+
+      void setCenter(
+        position.x + DEFAULT_STICKY_NOTE_WIDTH / 2,
+        position.y + DEFAULT_STICKY_NOTE_HEIGHT / 2,
+        { zoom: getZoom(), duration: 350 }
+      )
+    },
+    [getZoom, setCenter]
+  )
+
   const handleNodesChange: OnNodesChange<StickyNoteNodeType> = useCallback(
     (changes) => {
       changes.removeForNode(PREVIEW_NODE_ID)
@@ -163,6 +206,10 @@ function StickyBoardCanvas() {
     },
     [onNodesChange]
   )
+
+  const handleMoveEnd: OnMoveEnd = useCallback((_event, nextViewport) => {
+    setViewport(nextViewport)
+  }, [])
 
   const handleBarTextChange = useCallback(
     (nextText: string) => {
@@ -219,30 +266,35 @@ function StickyBoardCanvas() {
     ])
     setDraftText("")
     setPreviewPosition(null)
-
-    if (highlightTimerRef.current !== null) {
-      window.clearTimeout(highlightTimerRef.current)
-    }
-    setJustCreatedNodeId(newNode.id)
-    highlightTimerRef.current = window.setTimeout(() => {
-      setJustCreatedNodeId(null)
-      highlightTimerRef.current = null
-    }, 900)
-
-    void setCenter(
-      position.x + DEFAULT_STICKY_NOTE_WIDTH / 2,
-      position.y + DEFAULT_STICKY_NOTE_HEIGHT / 2,
-      { zoom: getZoom(), duration: 350 }
-    )
+    focusAndHighlightNode(newNode.id, position)
   }, [
     computePlacementPosition,
     draftColor,
     draftText,
-    getZoom,
+    focusAndHighlightNode,
     previewPosition,
-    setCenter,
     setNodes,
   ])
+
+  const handleAddBlankNote = useCallback(() => {
+    const position = computePlacementPosition()
+    const newNode = createStickyNoteNode({
+      position,
+      text: "",
+      color: draftColor,
+      selected: true,
+    })
+
+    setNodes((prev) => [
+      ...prev.map((node) => (node.selected ? { ...node, selected: false } : node)),
+      newNode,
+    ])
+    setPreviewPosition(null)
+    focusAndHighlightNode(newNode.id, position)
+    requestAnimationFrame(() => {
+      inputTextareaRef.current?.focus()
+    })
+  }, [computePlacementPosition, draftColor, focusAndHighlightNode, setNodes])
 
   const handleExitSyncMode = useCallback(() => {
     setNodes((prev) =>
@@ -253,6 +305,44 @@ function StickyBoardCanvas() {
     }
     inputTextareaRef.current?.focus()
   }, [computePlacementPosition, draftText, previewPosition, setNodes])
+
+  const handleFitView = useCallback(() => {
+    void fitView({ padding: 0.25, duration: 250 })
+  }, [fitView])
+
+  const handleToggleMiniMap = useCallback(() => {
+    setShowMiniMap((prev) => !prev)
+  }, [])
+
+  const handleDeleteSelected = useCallback(() => {
+    if (!hasSelection) {
+      return
+    }
+    void deleteElements({ nodes: selectedNodes, edges: selectedEdges })
+  }, [deleteElements, hasSelection, selectedEdges, selectedNodes])
+
+  const handleLoadSample = useCallback(() => {
+    setNodes(createInitialNodes())
+    setEdges(createInitialEdges())
+    setDraftText("")
+    setPreviewPosition(null)
+    setJustCreatedNodeId(null)
+    requestAnimationFrame(() => {
+      void fitView({ padding: 0.25, duration: 300 })
+    })
+  }, [fitView, setEdges, setNodes])
+
+  const handleClearBoard = useCallback(() => {
+    setNodes([])
+    setEdges([])
+    setDraftText("")
+    setPreviewPosition(null)
+    setJustCreatedNodeId(null)
+  }, [setEdges, setNodes])
+
+  const handleToggleTheme = useCallback(() => {
+    setTheme(resolvedTheme === "dark" ? "light" : "dark")
+  }, [resolvedTheme, setTheme])
 
   const renderedNodes = useMemo<StickyNoteNodeType[]>(() => {
     const decorated = nodes.map((node) => {
@@ -303,17 +393,6 @@ function StickyBoardCanvas() {
     syncingNodeId,
   ])
 
-  const handleFitView = useCallback(() => {
-    void fitView({ padding: 0.25, duration: 250 })
-  }, [fitView])
-
-  const handleDeleteSelected = useCallback(() => {
-    if (!hasSelection) {
-      return
-    }
-    void deleteElements({ nodes: selectedNodes, edges: selectedEdges })
-  }, [deleteElements, hasSelection, selectedEdges, selectedNodes])
-
   return (
     <div ref={containerRef} className="h-svh w-screen bg-background">
       <ReactFlow
@@ -323,11 +402,13 @@ function StickyBoardCanvas() {
         onNodesChange={handleNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
+        onMoveEnd={handleMoveEnd}
         connectionMode={ConnectionMode.Loose}
-        fitView
+        defaultViewport={initialBoard?.viewport}
+        fitView={!initialBoard?.viewport}
         fitViewOptions={{ padding: 0.25 }}
         defaultEdgeOptions={{ type: "smoothstep" }}
-        deleteKeyCode={["Backspace", "Delete"]}
+        deleteKeyCode={isBarFocused ? null : DELETE_KEY_CODES}
         forceColorMode={forceColorMode}
       >
         <Background variant={BackgroundVariant.Dots} gap={20} size={1.5} />
@@ -342,64 +423,20 @@ function StickyBoardCanvas() {
         ) : null}
 
         <Panel position="top-right">
-          <div className="flex items-center gap-1.5 rounded-lg border border-border bg-card/90 p-1.5 shadow-sm backdrop-blur-sm">
-            <Badge variant="secondary">
-              노드 {nodes.length} · 연결 {edges.length}
-            </Badge>
-            <Separator orientation="vertical" className="h-4 self-center" />
-            <Tooltip>
-              <TooltipTrigger
-                render={
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon-sm"
-                    onClick={handleFitView}
-                    aria-label="전체 보기"
-                  />
-                }
-              >
-                <Maximize2Icon />
-              </TooltipTrigger>
-              <TooltipContent>전체 보기</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger
-                render={
-                  <Button
-                    type="button"
-                    variant={showMiniMap ? "secondary" : "ghost"}
-                    size="icon-sm"
-                    onClick={() => setShowMiniMap((prev) => !prev)}
-                    aria-label="미니맵 전환"
-                    aria-pressed={showMiniMap}
-                  />
-                }
-              >
-                <MapIcon />
-              </TooltipTrigger>
-              <TooltipContent>
-                {showMiniMap ? "미니맵 숨기기" : "미니맵 표시"}
-              </TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger
-                render={
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon-sm"
-                    onClick={handleDeleteSelected}
-                    disabled={!hasSelection}
-                    aria-label="선택 항목 삭제"
-                  />
-                }
-              >
-                <Trash2Icon />
-              </TooltipTrigger>
-              <TooltipContent>선택 항목 삭제</TooltipContent>
-            </Tooltip>
-          </div>
+          <StickyToolbar
+            nodeCount={nodes.length}
+            edgeCount={edges.length}
+            hasSelection={hasSelection}
+            showMiniMap={showMiniMap}
+            resolvedTheme={resolvedTheme}
+            onAddNote={handleAddBlankNote}
+            onFitView={handleFitView}
+            onToggleMiniMap={handleToggleMiniMap}
+            onDeleteSelected={handleDeleteSelected}
+            onLoadSample={handleLoadSample}
+            onClearBoard={handleClearBoard}
+            onToggleTheme={handleToggleTheme}
+          />
         </Panel>
 
         <Panel position="bottom-center">
@@ -426,6 +463,12 @@ function StickyBoardCanvas() {
 }
 
 export function StickyBoard() {
+  const isHydrated = useIsHydrated()
+
+  if (!isHydrated) {
+    return <div className="h-svh w-screen bg-background" />
+  }
+
   return (
     <ReactFlowProvider>
       <StickyBoardCanvas />

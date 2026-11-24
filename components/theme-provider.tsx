@@ -28,6 +28,7 @@ function isTypingTarget(target: EventTarget | null) {
 
   return (
     target.isContentEditable ||
+    Boolean(target.closest("[contenteditable='true']")) ||
     target.tagName === "INPUT" ||
     target.tagName === "TEXTAREA" ||
     target.tagName === "SELECT"
@@ -39,7 +40,7 @@ function ThemeHotkey() {
 
   React.useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
-      if (event.defaultPrevented || event.repeat) {
+      if (event.defaultPrevented || event.repeat || event.isComposing) {
         return
       }
 
