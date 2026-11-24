@@ -1,28 +1,54 @@
-import type { Edge, Node } from "@xyflow/react"
+import type { Edge } from "@xyflow/react"
 
-export const INITIAL_NODES: Node[] = [
-  {
+import {
+  createStickyNoteNode,
+  DEFAULT_STICKY_NOTE_HEIGHT,
+  DEFAULT_STICKY_NOTE_WIDTH,
+  type StickyNoteNodeType,
+} from "./sticky-note-types"
+
+const INITIAL_TIMESTAMP = "2026-11-24T09:00:00.000Z"
+
+export const INITIAL_NODES: StickyNoteNodeType[] = [
+  createStickyNoteNode({
     id: "note-1",
-    position: { x: 80, y: 120 },
-    data: { label: "포스트잇 노드를 자유롭게 드래그해 보세요." },
-  },
-  {
+    position: { x: 60, y: 120 },
+    width: DEFAULT_STICKY_NOTE_WIDTH,
+    height: DEFAULT_STICKY_NOTE_HEIGHT,
+    color: "yellow",
+    text: "포스트잇 안쪽을 클릭해 내용을 바로 수정하고, 상단 바를 드래그해 이동할 수 있어요.",
+    createdAt: INITIAL_TIMESTAMP,
+    updatedAt: INITIAL_TIMESTAMP,
+  }),
+  createStickyNoteNode({
     id: "note-2",
-    position: { x: 360, y: 80 },
-    data: { label: "핸들을 드래그해 노드를 연결할 수 있어요." },
-  },
-  {
+    position: { x: 380, y: 60 },
+    width: DEFAULT_STICKY_NOTE_WIDTH,
+    height: DEFAULT_STICKY_NOTE_HEIGHT,
+    color: "blue",
+    text: "포스트잇을 선택하면 색상 변경·복제·삭제 툴바와 크기 조절 핸들이 나타납니다.",
+    createdAt: INITIAL_TIMESTAMP,
+    updatedAt: INITIAL_TIMESTAMP,
+  }),
+  createStickyNoteNode({
     id: "note-3",
-    position: { x: 360, y: 240 },
-    data: { label: "선택 후 Backspace/Delete로 삭제할 수 있어요." },
-  },
+    position: { x: 380, y: 290 },
+    width: DEFAULT_STICKY_NOTE_WIDTH,
+    height: DEFAULT_STICKY_NOTE_HEIGHT,
+    color: "green",
+    text: "노드 테두리의 연결점을 드래그해 다른 포스트잇과 자유롭게 연결해 보세요.",
+    createdAt: INITIAL_TIMESTAMP,
+    updatedAt: INITIAL_TIMESTAMP,
+  }),
 ]
 
 export const INITIAL_EDGES: Edge[] = [
   {
     id: "edge-1-2",
     source: "note-1",
+    sourceHandle: "right",
     target: "note-2",
+    targetHandle: "left",
     type: "smoothstep",
   },
 ]

@@ -82,6 +82,31 @@
     --sidebar-accent-foreground: oklch(0.205 0 0);
     --sidebar-border: oklch(0.922 0 0);
     --sidebar-ring: oklch(0.708 0 0);
+    --note-yellow-bg: oklch(0.965 0.065 95);
+    --note-yellow-border: oklch(0.86 0.11 92);
+    --note-yellow-fg: oklch(0.26 0.04 82);
+    --note-yellow-muted: oklch(0.48 0.05 84);
+    --note-yellow-swatch: oklch(0.84 0.15 92);
+    --note-pink-bg: oklch(0.955 0.045 355);
+    --note-pink-border: oklch(0.85 0.09 355);
+    --note-pink-fg: oklch(0.26 0.05 355);
+    --note-pink-muted: oklch(0.48 0.06 355);
+    --note-pink-swatch: oklch(0.76 0.14 355);
+    --note-blue-bg: oklch(0.955 0.04 235);
+    --note-blue-border: oklch(0.84 0.085 235);
+    --note-blue-fg: oklch(0.25 0.045 240);
+    --note-blue-muted: oklch(0.46 0.06 238);
+    --note-blue-swatch: oklch(0.74 0.13 238);
+    --note-green-bg: oklch(0.955 0.048 152);
+    --note-green-border: oklch(0.84 0.095 152);
+    --note-green-fg: oklch(0.25 0.045 152);
+    --note-green-muted: oklch(0.45 0.06 152);
+    --note-green-swatch: oklch(0.75 0.14 152);
+    --note-purple-bg: oklch(0.955 0.042 295);
+    --note-purple-border: oklch(0.84 0.088 295);
+    --note-purple-fg: oklch(0.25 0.05 295);
+    --note-purple-muted: oklch(0.47 0.065 295);
+    --note-purple-swatch: oklch(0.73 0.14 295);
 }
 
 .dark {
@@ -116,6 +141,31 @@
     --sidebar-accent-foreground: oklch(0.985 0 0);
     --sidebar-border: oklch(1 0 0 / 10%);
     --sidebar-ring: oklch(0.556 0 0);
+    --note-yellow-bg: oklch(0.275 0.048 88);
+    --note-yellow-border: oklch(0.45 0.085 88);
+    --note-yellow-fg: oklch(0.95 0.025 95);
+    --note-yellow-muted: oklch(0.78 0.05 92);
+    --note-yellow-swatch: oklch(0.74 0.14 90);
+    --note-pink-bg: oklch(0.265 0.052 355);
+    --note-pink-border: oklch(0.45 0.095 355);
+    --note-pink-fg: oklch(0.95 0.02 355);
+    --note-pink-muted: oklch(0.78 0.055 355);
+    --note-pink-swatch: oklch(0.70 0.15 355);
+    --note-blue-bg: oklch(0.26 0.048 242);
+    --note-blue-border: oklch(0.44 0.09 240);
+    --note-blue-fg: oklch(0.95 0.02 238);
+    --note-blue-muted: oklch(0.78 0.055 238);
+    --note-blue-swatch: oklch(0.69 0.14 240);
+    --note-green-bg: oklch(0.26 0.048 155);
+    --note-green-border: oklch(0.44 0.09 154);
+    --note-green-fg: oklch(0.95 0.022 152);
+    --note-green-muted: oklch(0.78 0.055 152);
+    --note-green-swatch: oklch(0.70 0.14 154);
+    --note-purple-bg: oklch(0.265 0.052 296);
+    --note-purple-border: oklch(0.45 0.095 296);
+    --note-purple-fg: oklch(0.95 0.022 296);
+    --note-purple-muted: oklch(0.78 0.055 296);
+    --note-purple-swatch: oklch(0.69 0.15 296);
 }
 
 @layer base {
@@ -172,4 +222,150 @@
 
 .react-flow.dark {
   color-scheme: dark;
+}
+
+.sticky-note[data-note-color="yellow"] {
+  --note-bg: var(--note-yellow-bg);
+  --note-border: var(--note-yellow-border);
+  --note-fg: var(--note-yellow-fg);
+  --note-muted: var(--note-yellow-muted);
+  --note-swatch: var(--note-yellow-swatch);
+}
+
+.sticky-note[data-note-color="pink"] {
+  --note-bg: var(--note-pink-bg);
+  --note-border: var(--note-pink-border);
+  --note-fg: var(--note-pink-fg);
+  --note-muted: var(--note-pink-muted);
+  --note-swatch: var(--note-pink-swatch);
+}
+
+.sticky-note[data-note-color="blue"] {
+  --note-bg: var(--note-blue-bg);
+  --note-border: var(--note-blue-border);
+  --note-fg: var(--note-blue-fg);
+  --note-muted: var(--note-blue-muted);
+  --note-swatch: var(--note-blue-swatch);
+}
+
+.sticky-note[data-note-color="green"] {
+  --note-bg: var(--note-green-bg);
+  --note-border: var(--note-green-border);
+  --note-fg: var(--note-green-fg);
+  --note-muted: var(--note-green-muted);
+  --note-swatch: var(--note-green-swatch);
+}
+
+.sticky-note[data-note-color="purple"] {
+  --note-bg: var(--note-purple-bg);
+  --note-border: var(--note-purple-border);
+  --note-fg: var(--note-purple-fg);
+  --note-muted: var(--note-purple-muted);
+  --note-swatch: var(--note-purple-swatch);
+}
+
+.sticky-note {
+  background-color: var(--note-bg);
+  border-color: var(--note-border);
+  color: var(--note-fg);
+}
+
+.sticky-note[data-selected="true"] {
+  box-shadow:
+    0 0 0 2px var(--ring),
+    0 8px 24px color-mix(in oklch, var(--foreground) 12%, transparent);
+}
+
+.sticky-note-muted {
+  color: var(--note-muted);
+}
+
+.sticky-note [data-slot="textarea"] {
+  field-sizing: fixed;
+  border-color: transparent;
+  background-color: transparent;
+  color: var(--note-fg);
+  box-shadow: none;
+}
+
+.sticky-note [data-slot="textarea"]::placeholder {
+  color: var(--note-muted);
+}
+
+.sticky-note-swatch {
+  background-color: var(--swatch-color);
+}
+
+.sticky-note-handle {
+  width: 10px;
+  height: 10px;
+  border-width: 2px;
+  opacity: 0;
+  transition:
+    opacity 150ms ease,
+    transform 150ms ease;
+}
+
+.react-flow__node:hover .sticky-note-handle,
+.react-flow__node.selected .sticky-note-handle,
+.sticky-note-handle.connectingfrom,
+.sticky-note-handle.connectingto,
+.sticky-note-handle:hover {
+  opacity: 1;
+}
+
+.sticky-note-resize-handle {
+  width: 9px;
+  height: 9px;
+  border-radius: 9999px;
+  border: 2px solid var(--background);
+  background-color: var(--primary);
+}
+
+.sticky-note-resize-line {
+  border-color: var(--ring);
+}
+
+@keyframes sticky-note-pop {
+  0% {
+    transform: scale(0.92);
+    opacity: 0.4;
+    box-shadow: 0 0 0 0 var(--primary);
+  }
+  45% {
+    transform: scale(1.03);
+    opacity: 1;
+    box-shadow:
+      0 0 0 5px color-mix(in oklch, var(--primary) 30%, transparent),
+      0 12px 28px color-mix(in oklch, var(--foreground) 14%, transparent);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+    box-shadow: 0 1px 3px color-mix(in oklch, var(--foreground) 10%, transparent);
+  }
+}
+
+.sticky-note[data-preview="true"] {
+  border-style: dashed;
+  border-width: 2px;
+  opacity: 0.88;
+  box-shadow: 0 8px 24px color-mix(in oklch, var(--foreground) 10%, transparent);
+}
+
+.sticky-note[data-syncing="true"] {
+  box-shadow:
+    0 0 0 2.5px var(--primary),
+    0 10px 28px color-mix(in oklch, var(--primary) 20%, transparent);
+}
+
+.sticky-note[data-just-created="true"] {
+  animation: sticky-note-pop 750ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sticky-note[data-just-created="true"] {
+    animation: none;
+    box-shadow: 0 0 0 2.5px var(--primary);
+  }
 }
