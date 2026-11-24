@@ -88,7 +88,9 @@ function StickyBoardCanvas() {
   const [viewport, setViewport] = useState<Viewport | undefined>(
     initialBoard?.viewport
   )
-  const [showMiniMap, setShowMiniMap] = useState(true)
+  const [showMiniMap, setShowMiniMap] = useState(
+    () => window.innerWidth >= 768
+  )
   const [draftText, setDraftText] = useState("")
   const [draftColor, setDraftColor] = useState<StickyNoteColor>("yellow")
   const [previewPosition, setPreviewPosition] = useState<XYPosition | null>(

@@ -369,3 +369,15 @@
     box-shadow: 0 0 0 2.5px var(--primary);
   }
 }
+
+@media (max-width: 1023px) {
+  .react-flow__controls,
+  .react-flow__minimap {
+    margin-bottom: 132px;
+  }
+
+  .react-flow__minimap {
+    width: 148px;
+    height: 108px;
+  }
+}
